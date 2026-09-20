@@ -1,0 +1,17 @@
+# 貢献方法 / Contributing
+
+このリポジトリは公開用の製品ソースと利用文書を収録します。開発用ツール、内部テスト、作業記録は別の開発リポジトリで管理します。
+
+同梱の[公開契約テスト](tests/release/README.md)は、公開ソースと実行体だけで実行できます。修正案の動作確認にも使ってください。
+
+不具合や提案は [Issues](https://github.com/prog-sha/gd-cli/issues) へ、版・OS・最小の再現コード・期待した動作を添えて報告してください。修正案は公開ソースに対する差分で示せます。取り込み前に開発側で検証します。
+
+脆弱性は公開 issue へ書かず、[SECURITY.md](SECURITY.md) に従ってください。ビルド手順は [README](README.md#ソースからのビルド) にあります。
+
+This repository contains public product source and user documentation. Development tools, internal tests, and work records are maintained separately.
+
+The bundled [public acceptance tests](tests/release/README.md) run with only the public source and executable, and can also validate proposed fixes.
+
+Use [Issues](https://github.com/prog-sha/gd-cli/issues) for bugs and suggestions. Include the version, OS, a minimal reproducer, and expected behavior. Proposed fixes can be submitted as source diffs; maintainers validate them in the development repository before integration.
+
+Follow [SECURITY.md](SECURITY.md) for vulnerability reports. See [README](README.en.md#build-from-source) for build instructions.

@@ -1,0 +1,57 @@
+# Validate the uploaded cross-built executable on its native platform.
+name: Verify distribution
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Draft release containing the candidate
+        required: true
+      sha256:
+        description: Expected archive fingerprint
+        required: true
+      source:
+        description: Development source commit recorded by the build
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  windows:
+    # Reading unpublished assets requires write access on the temporary job token.
+    permissions:
+      contents: write
+    runs-on: windows-2022
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Download and verify candidate
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          ARCHIVE_HASH: ${{ inputs.sha256 }}
+          SOURCE_SHA: ${{ inputs.source }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh release download $env:RELEASE_TAG --pattern gd-windows-x86_64.zip --dir tmp/candidate
+          if ($LASTEXITCODE -ne 0) { throw 'Candidate download failed' }
+          $archive = 'tmp/candidate/gd-windows-x86_64.zip'
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLower() -cne $env:ARCHIVE_HASH) { throw 'Archive fingerprint mismatch' }
+          Expand-Archive $archive tmp/candidate
+          $build = Get-Content tmp/candidate/gd/BUILD.json -Raw | ConvertFrom-Json
+          if ($build.sha -cne $env:SOURCE_SHA -or $build.platform -cne 'windows') { throw 'Source or platform mismatch' }
+          if ((Get-FileHash tmp/candidate/gd/gd.exe -Algorithm SHA256).Hash.ToLower() -cne $build.binary_sha256) { throw 'Executable fingerprint mismatch' }
+          python tmp/candidate/gd/tests/release/run.py --gd tmp/candidate/gd/gd.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Native acceptance suite failed' }
+          @{ public = $env:GITHUB_SHA; source = $env:SOURCE_SHA; archive = $env:ARCHIVE_HASH; tag = $env:RELEASE_TAG } | ConvertTo-Json | Set-Content tmp/verification.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: windows-verification
+          path: |
+            tmp/verification.json
+            tmp/candidate/gd/tmp/release-check-*/
+          retention-days: 7
