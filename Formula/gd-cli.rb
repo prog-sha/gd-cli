@@ -7,7 +7,6 @@ class GdCli < Formula
   sha256 "a1cf389162dbb59c14e8945ec036365892f0d46bc29acb751888ea0468f742cd"
   license "MIT"
   depends_on :macos
-  depends_on macos: :high_sierra
   skip_clean "bin/gd" # Preserve the executable signature.
 
   # Install the published executable without rewriting its load commands.
