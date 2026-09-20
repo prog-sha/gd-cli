@@ -22,6 +22,55 @@ GDExtensionでC++と直接つながります。AI agentが書いて動かすこ�
 中の`gd`をPATHの通ったdirectoryへ置きます。`gd --version`が版を表示すれば導入は完了です。
 配布物のSHA-256は同梱の`SHA256SUMS`で照合できます。macOS版はDeveloper ID署名とAppleの公証を通しています。
 
+### macOS / Linux
+
+```sh
+curl -fsSL https://gd-cli.progsha.com/install.sh | sh
+```
+
+チェックサムを照合して`~/.local/bin`へ導入します。案内が出た場合は、このdirectoryをPATHへ追加してください。Linux配布バイナリにはx86_64とglibc 2.38以降が必要です。
+
+### Windows（PowerShell）
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://gd-cli.progsha.com/install.ps1 -OutFile install-gd.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install-gd.ps1
+```
+
+PowerShellで実行してください。管理者権限は不要です。SHA-256を照合し、`%LOCALAPPDATA%\gd-cli\bin`へ`gd.exe`を置き、ユーザーのPATHへ追加します。新しいターミナルを開き、`gd --version`で確認します。
+
+手動の場合はReleasesから`gd-windows-x86_64.zip`を取得して展開し、`gd.exe`を置いたdirectoryをユーザーのPATHへ追加します。PowerShellでUnix用の`curl | sh`は実行しません。
+
+### Homebrew（macOS）
+
+```sh
+brew tap prog-sha/gd-cli https://github.com/prog-sha/gd-cli
+brew install prog-sha/gd-cli/gd-cli
+```
+
+製品リポジトリをtapとして使い、署名済みUniversal実行体を導入します。更新は`brew update && brew upgrade prog-sha/gd-cli/gd-cli`、削除は`brew uninstall gd-cli`です。
+
+### apt（Linux amd64）
+
+Ubuntu 24.04、Debian 13など、glibc 2.38以降のapt対応環境で利用できます。Ubuntu 22.04やDebian 12ではsourceからbuildしてください。専用の署名鍵を、この配布元だけに適用します。
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://gd-cli.progsha.com/apt/gd-cli.asc | sudo tee /etc/apt/keyrings/gd-cli.asc >/dev/null
+sudo chmod 0644 /etc/apt/keyrings/gd-cli.asc
+echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/gd-cli.asc] https://gd-cli.progsha.com/apt stable main' | sudo tee /etc/apt/sources.list.d/gd-cli.list
+sudo apt update
+sudo apt install gd-cli
+```
+
+以降は通常のapt更新で新しい版を取得できます。削除は`sudo apt remove gd-cli`です。HTTPSに加え、aptが配布メタデータの署名を検証します。
+
+### winget（Windows）
+
+公式カタログへの登録申請・審査は未完了です。登録までは上記のPowerShellインストーラーを使ってください。管理者向けの[申請用マニフェスト](https://github.com/prog-sha/gd-cli/tree/main/packaging/winget)を用意していますが、`winget install prog-sha.gd-cli`はまだ利用できません。
+
+### sourceからbuild
+
 sourceからbuildする場合はPython、uv、SCons、C/C++ compilerを用意し、`bin/`にできる`gd.*.template_release.*`を使います。
 TLSは内蔵しているため、別のTLSライブラリは要りません。
 
@@ -52,6 +101,32 @@ gd hello.gd
 ```sh
 gd check hello.gd
 ```
+
+## scriptの読み込みと共通定数
+
+scriptの先頭に`@import`を書くと、別のscriptを短い名前で使えます。外部パッケージだけでなく、手元のファイルにも使います。次の宣言は:
+
+```gdscript
+const Settings = preload("./settings.gd")
+const Greeting = preload("./greeting.gd")
+```
+
+こう書けます:
+
+```gdscript
+@import "./settings.gd" as Settings
+@import "./greeting.gd" as Greeting
+
+func main():
+	print(Greeting.message(Settings.USER))
+	return 0
+```
+
+共通の値を`settings.gd`へまとめ、`Settings.USER`や`Settings.TITLE`として使います。`const X = preload(...)`の長い列も、設定定数を各scriptへコピーする作業も減らせます。実際の設定値は`const`のままです。importはmoduleに名前を付ける構文で、全メンバーの名前を一括展開するものではありません。
+
+実行できる全ファイルは[samples/imports](https://github.com/prog-sha/gd-cli/tree/main/samples/imports)にあります。`gd samples/imports/main.gd`で`Hello, world!`と表示します。組み込みの`GD.web`などにはimportは不要です。
+
+パッケージでは`gd add`が依存を取得して呼び名を登録し、`@import hello`がその呼び名を使います。導入とversion固定は[packageと配布](#packageと配布)を参照してください。
 
 ## 用途から選ぶ
 
@@ -1242,7 +1317,7 @@ gd task test
 入れたpackageは、利用側が決めた呼び名を使って`pkg://<呼び名>/`から読みます。
 
 ```gdscript
-const Hello := preload("pkg://hello/mod.gd")
+@import hello as Hello
 ```
 
 - `pkg://`は利用者ごとの共有cacheを指し、projectへは何も複製しません。
@@ -1256,6 +1331,8 @@ const Hello := preload("pkg://hello/mod.gd")
 ### importの短い書き方
 
 `@import`は`const 名 = preload(...)`の短い書き方です。
+
+外部依存がなくても使えます。共通定数をまとめる[samples/imports](https://github.com/prog-sha/gd-cli/tree/main/samples/imports)と、実際の登録所の依存とlockfileを含む[samples/packages](https://github.com/prog-sha/gd-cli/tree/main/samples/packages)を用意しています。
 
 ```gdscript
 @import greet                 # 呼び名 → pkg://greet/mod.gd、識別子は greet

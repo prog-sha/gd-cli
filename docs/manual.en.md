@@ -22,6 +22,55 @@ Download the archive for your OS from [Releases](https://github.com/prog-sha/gd-
 and put the `gd` inside on your PATH. When `gd --version` prints a version, the install is done.
 The SHA-256 of each archive can be checked against the bundled `SHA256SUMS`. The macOS build is signed with a Developer ID and notarized by Apple.
 
+### macOS / Linux
+
+```sh
+curl -fsSL https://gd-cli.progsha.com/install.sh | sh
+```
+
+The installer checks the archive checksum and installs to `~/.local/bin`. Add that directory to your PATH if prompted. Linux binaries require x86_64 and glibc 2.38 or newer.
+
+### Windows (PowerShell)
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://gd-cli.progsha.com/install.ps1 -OutFile install-gd.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install-gd.ps1
+```
+
+Run these commands in PowerShell. Administrator access is not required. The installer verifies the SHA-256 checksum, installs `gd.exe` into `%LOCALAPPDATA%\gd-cli\bin`, and adds that directory to your user PATH. Open a new terminal and run `gd --version`.
+
+For a manual install, download `gd-windows-x86_64.zip` from Releases, extract it, and add the directory containing `gd.exe` to your user PATH. Do not run the Unix `curl | sh` command in PowerShell.
+
+### Homebrew (macOS)
+
+```sh
+brew tap prog-sha/gd-cli https://github.com/prog-sha/gd-cli
+brew install prog-sha/gd-cli/gd-cli
+```
+
+This tap lives in the product repository and installs the signed Universal binary. Update with `brew update && brew upgrade prog-sha/gd-cli/gd-cli`; remove with `brew uninstall gd-cli`.
+
+### apt (Linux amd64)
+
+Use an apt-based distribution with glibc 2.38 or newer, such as Ubuntu 24.04 or Debian 13. Ubuntu 22.04 and Debian 12 need a source build. The dedicated repository uses a signing key restricted to this source:
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://gd-cli.progsha.com/apt/gd-cli.asc | sudo tee /etc/apt/keyrings/gd-cli.asc >/dev/null
+sudo chmod 0644 /etc/apt/keyrings/gd-cli.asc
+echo 'deb [arch=amd64 signed-by=/etc/apt/keyrings/gd-cli.asc] https://gd-cli.progsha.com/apt stable main' | sudo tee /etc/apt/sources.list.d/gd-cli.list
+sudo apt update
+sudo apt install gd-cli
+```
+
+Subsequent versions arrive through normal apt updates. Remove with `sudo apt remove gd-cli`. Repository metadata and packages use HTTPS; apt also verifies the signed metadata.
+
+### winget (Windows)
+
+The official winget catalog entry is pending submission and review. Until it is accepted, use the PowerShell installer above. Maintainers can validate or submit the [prepared manifests](https://github.com/prog-sha/gd-cli/tree/main/packaging/winget); `winget install prog-sha.gd-cli` is not yet an available installation route.
+
+### Build from source
+
 Building from source needs Python, uv, SCons, and a C/C++ compiler. The executable is `gd.*.template_release.*` under `bin/`.
 TLS is built in, so no separate TLS library is needed.
 
@@ -52,6 +101,32 @@ To check types and syntax without running, use `check`.
 ```sh
 gd check hello.gd
 ```
+
+## Import scripts and shared constants
+
+Use `@import` at the top of a script to give another script a short name. It works for local files as well as installed packages. These declarations:
+
+```gdscript
+const Settings = preload("./settings.gd")
+const Greeting = preload("./greeting.gd")
+```
+
+can be written as:
+
+```gdscript
+@import "./settings.gd" as Settings
+@import "./greeting.gd" as Greeting
+
+func main():
+	print(Greeting.message(Settings.USER))
+	return 0
+```
+
+Keep shared values in `settings.gd`, and access them as `Settings.USER` and `Settings.TITLE`. This avoids repeating both `const X = preload(...)` declarations and copies of configuration constants across scripts. Actual configuration values remain `const`; an import binds a module name, not all its members separately.
+
+The complete runnable files are in [samples/imports](https://github.com/prog-sha/gd-cli/tree/main/samples/imports). Run `gd samples/imports/main.gd` to print `Hello, world!`. Built-in APIs such as `GD.web` need no import.
+
+For packages, `gd add` installs a dependency and assigns an alias; `@import hello` uses that alias. See [Packages and distribution](#en-packages-and-distribution) for installation and version locking.
 
 ## Pick by purpose
 
@@ -1243,7 +1318,7 @@ gd task test
 An installed package is read from `pkg://<alias>/`, using the alias chosen by the consumer.
 
 ```gdscript
-const Hello := preload("pkg://hello/mod.gd")
+@import hello as Hello
 ```
 
 - `pkg://` points into the per-user shared cache and copies nothing into the project.
@@ -1257,6 +1332,8 @@ const Hello := preload("pkg://hello/mod.gd")
 ### Short import syntax
 
 `@import` is the short form of `const Name = preload(...)`.
+
+It is useful even without external dependencies: see [samples/imports](https://github.com/prog-sha/gd-cli/tree/main/samples/imports) for grouped constants, and [samples/packages](https://github.com/prog-sha/gd-cli/tree/main/samples/packages) for a real registry dependency and its lockfile.
 
 ```gdscript
 @import greet                 # an alias: pkg://greet/mod.gd, bound as greet

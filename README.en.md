@@ -55,6 +55,17 @@ To build from source, see [Build from source](#build-from-source).
 curl -fsSL https://gd-cli.progsha.com/install.sh | sh
 ```
 
+On Windows, run in PowerShell without administrator access:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://gd-cli.progsha.com/install.ps1 -OutFile install-gd.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install-gd.ps1
+```
+
+Open a new terminal and run `gd --version`. See the [manual](docs/manual.en.md#install) for Homebrew and apt.
+
+Use `@import` to shorten module declarations and access shared constants. See the [runnable samples](samples/README.md).
+
 ## Standard features
 
 | Entry | Contents |

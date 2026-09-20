@@ -55,6 +55,17 @@ sourceからのbuildは[ソースからのビルド](#ソースからのビル�
 curl -fsSL https://gd-cli.progsha.com/install.sh | sh
 ```
 
+WindowsはPowerShellで実行します。管理者権限は不要です。
+
+```powershell
+Invoke-WebRequest -UseBasicParsing https://gd-cli.progsha.com/install.ps1 -OutFile install-gd.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install-gd.ps1
+```
+
+新しいターミナルで`gd --version`を確認してください。Homebrew・aptの導入方法は[マニュアル](docs/manual.md#導入)を参照してください。
+
+`@import`でモジュールの読み込みと共通定数の利用を短く書けます。[実行できるサンプル](samples/README.md)を参照してください。
+
 ## 標準機能
 
 | 入口 | 内容 |

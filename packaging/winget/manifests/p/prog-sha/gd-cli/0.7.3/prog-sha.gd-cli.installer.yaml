@@ -1,0 +1,14 @@
+# Install the checksum-verified portable executable from the public archive.
+PackageIdentifier: prog-sha.gd-cli
+PackageVersion: 0.7.3
+InstallerType: zip
+NestedInstallerType: portable
+NestedInstallerFiles:
+- RelativeFilePath: gd\gd.exe
+  PortableCommandAlias: gd
+Installers:
+- Architecture: x64
+  InstallerUrl: https://github.com/prog-sha/gd-cli/releases/download/v0.7.3/gd-windows-x86_64.zip
+  InstallerSha256: 7F60BFE8E9EDE2B3E8FB99711E13D73E20B2FB4379179D1F1FFDE6D77F81F15F
+ManifestType: installer
+ManifestVersion: 1.10.0

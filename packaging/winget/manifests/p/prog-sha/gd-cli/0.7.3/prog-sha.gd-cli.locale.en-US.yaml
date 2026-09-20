@@ -1,0 +1,12 @@
+# Describe the public command-line package.
+PackageIdentifier: prog-sha.gd-cli
+PackageVersion: 0.7.3
+PackageLocale: en-US
+Publisher: prog-sha
+PackageName: gd-cli
+PackageUrl: https://github.com/prog-sha/gd-cli
+License: MIT
+LicenseUrl: https://github.com/prog-sha/gd-cli/blob/main/LICENSE.txt
+ShortDescription: Command-line runtime for typed scripts, services, and data workflows
+ManifestType: defaultLocale
+ManifestVersion: 1.10.0

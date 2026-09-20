@@ -15,3 +15,7 @@ The bundled [public acceptance tests](tests/release/README.md) run with only the
 Use [Issues](https://github.com/prog-sha/gd-cli/issues) for bugs and suggestions. Include the version, OS, a minimal reproducer, and expected behavior. Proposed fixes can be submitted as source diffs; maintainers validate them in the development repository before integration.
 
 Follow [SECURITY.md](SECURITY.md) for vulnerability reports. See [README](README.en.md#build-from-source) for build instructions.
+
+安定版は`0.7`のようなmajor.minor branchで管理し、`v0.7.3`のようなpatch tagはそのbranch上のcommitを指します。公開済みtagは移動しません。公開Actionsは手動の実機検査のみです。
+
+Stable releases use a major.minor branch such as `0.7`. Patch tags such as `v0.7.3` point to commits on that branch and remain immutable. Public Actions run native acceptance checks manually.
